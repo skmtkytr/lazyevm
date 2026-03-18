@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Tabs, Wrap},
+    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -254,7 +254,7 @@ impl Component for ForgePanel {
 
         let chunks = Layout::vertical([
             Constraint::Length(1), // tabs
-            Constraint::Min(1),   // output
+            Constraint::Min(1),    // output
         ])
         .split(inner);
 
@@ -285,8 +285,8 @@ impl Component for ForgePanel {
                 ],
             };
 
-            let paragraph = Paragraph::new(hint_lines)
-                .alignment(ratatui::layout::Alignment::Center);
+            let paragraph =
+                Paragraph::new(hint_lines).alignment(ratatui::layout::Alignment::Center);
 
             frame.render_widget(paragraph, chunks[1]);
         } else {

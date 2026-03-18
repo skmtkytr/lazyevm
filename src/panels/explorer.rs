@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Row, Table, TableState, Wrap},
+    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -141,7 +141,10 @@ impl ExplorerPanel {
                 ListItem::new(Line::from(vec![
                     Span::styled(format!("{} ", status), Style::default().fg(status_color)),
                     Span::styled(format!("{:<18} ", hash_short), style),
-                    Span::styled(format!("{} → {} ", from_short, to_short), Style::default().fg(Theme::SUBTEXT0)),
+                    Span::styled(
+                        format!("{} → {} ", from_short, to_short),
+                        Style::default().fg(Theme::SUBTEXT0),
+                    ),
                     Span::styled(&tx.value, Style::default().fg(Theme::GREEN)),
                 ]))
             })
@@ -169,7 +172,11 @@ impl ExplorerPanel {
     fn draw_tx_detail(&self, frame: &mut Frame, area: Rect) {
         if let Some(ref detail) = self.tx_detail {
             let status = if detail.status { "Success" } else { "Failed" };
-            let status_color = if detail.status { Theme::GREEN } else { Theme::RED };
+            let status_color = if detail.status {
+                Theme::GREEN
+            } else {
+                Theme::RED
+            };
 
             let lines = vec![
                 Line::from(vec![
@@ -251,38 +258,34 @@ impl Component for ExplorerPanel {
 
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Action::Select => {
-                match &self.view {
-                    ExplorerView::Blocks => {
-                        if let Some(block) = self.blocks.get(self.selected_block) {
-                            return Some(Action::SelectBlock(block.number));
-                        }
+            Action::Select => match &self.view {
+                ExplorerView::Blocks => {
+                    if let Some(block) = self.blocks.get(self.selected_block) {
+                        return Some(Action::SelectBlock(block.number));
                     }
-                    ExplorerView::Transactions(_) => {
-                        if let Some(tx) = self.transactions.get(self.selected_tx) {
-                            return Some(Action::SelectTx(tx.hash.clone()));
-                        }
-                    }
-                    ExplorerView::TxDetail(_) => {}
                 }
-            }
-            Action::Back => {
-                match &self.view {
-                    ExplorerView::TxDetail(_) => {
-                        self.view = if let Some(block) = self.blocks.get(self.selected_block) {
-                            ExplorerView::Transactions(block.number)
-                        } else {
-                            ExplorerView::Blocks
-                        };
-                        self.tx_detail = None;
+                ExplorerView::Transactions(_) => {
+                    if let Some(tx) = self.transactions.get(self.selected_tx) {
+                        return Some(Action::SelectTx(tx.hash.clone()));
                     }
-                    ExplorerView::Transactions(_) => {
-                        self.view = ExplorerView::Blocks;
-                        self.transactions.clear();
-                    }
-                    ExplorerView::Blocks => {}
                 }
-            }
+                ExplorerView::TxDetail(_) => {}
+            },
+            Action::Back => match &self.view {
+                ExplorerView::TxDetail(_) => {
+                    self.view = if let Some(block) = self.blocks.get(self.selected_block) {
+                        ExplorerView::Transactions(block.number)
+                    } else {
+                        ExplorerView::Blocks
+                    };
+                    self.tx_detail = None;
+                }
+                ExplorerView::Transactions(_) => {
+                    self.view = ExplorerView::Blocks;
+                    self.transactions.clear();
+                }
+                ExplorerView::Blocks => {}
+            },
             Action::PrevTab => {
                 return Some(Action::FocusSidebar);
             }
@@ -315,34 +318,24 @@ impl Component for ExplorerPanel {
                 self.tx_detail = Some(detail.clone());
             }
             Action::Up => match self.view {
-                ExplorerView::Blocks => {
-                    if !self.blocks.is_empty() {
-                        self.selected_block = self.selected_block.saturating_sub(1);
-                        self.block_state.select(Some(self.selected_block));
-                    }
+                ExplorerView::Blocks if !self.blocks.is_empty() => {
+                    self.selected_block = self.selected_block.saturating_sub(1);
+                    self.block_state.select(Some(self.selected_block));
                 }
-                ExplorerView::Transactions(_) => {
-                    if !self.transactions.is_empty() {
-                        self.selected_tx = self.selected_tx.saturating_sub(1);
-                        self.tx_state.select(Some(self.selected_tx));
-                    }
+                ExplorerView::Transactions(_) if !self.transactions.is_empty() => {
+                    self.selected_tx = self.selected_tx.saturating_sub(1);
+                    self.tx_state.select(Some(self.selected_tx));
                 }
                 _ => {}
             },
             Action::Down => match self.view {
-                ExplorerView::Blocks => {
-                    if !self.blocks.is_empty() {
-                        self.selected_block =
-                            (self.selected_block + 1).min(self.blocks.len() - 1);
-                        self.block_state.select(Some(self.selected_block));
-                    }
+                ExplorerView::Blocks if !self.blocks.is_empty() => {
+                    self.selected_block = (self.selected_block + 1).min(self.blocks.len() - 1);
+                    self.block_state.select(Some(self.selected_block));
                 }
-                ExplorerView::Transactions(_) => {
-                    if !self.transactions.is_empty() {
-                        self.selected_tx =
-                            (self.selected_tx + 1).min(self.transactions.len() - 1);
-                        self.tx_state.select(Some(self.selected_tx));
-                    }
+                ExplorerView::Transactions(_) if !self.transactions.is_empty() => {
+                    self.selected_tx = (self.selected_tx + 1).min(self.transactions.len() - 1);
+                    self.tx_state.select(Some(self.selected_tx));
                 }
                 _ => {}
             },
@@ -393,11 +386,9 @@ impl Component for ExplorerPanel {
                 self.draw_blocks(frame, inner);
             }
             ExplorerView::Transactions(_) => {
-                let chunks = Layout::vertical([
-                    Constraint::Percentage(40),
-                    Constraint::Percentage(60),
-                ])
-                .split(inner);
+                let chunks =
+                    Layout::vertical([Constraint::Percentage(40), Constraint::Percentage(60)])
+                        .split(inner);
 
                 self.draw_blocks(frame, chunks[0]);
                 self.draw_transactions(frame, chunks[1]);

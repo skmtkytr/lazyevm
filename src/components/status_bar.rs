@@ -1,9 +1,9 @@
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
+    Frame,
 };
 
 use crate::panels::PanelId;
@@ -50,11 +50,8 @@ impl StatusBar {
     }
 
     pub fn draw(&self, frame: &mut Frame, area: Rect) {
-        let chunks = Layout::horizontal([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
-        ])
-        .split(area);
+        let chunks = Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(area);
 
         // Left: keybinding hints
         let hints = self.get_hints();
@@ -95,7 +92,9 @@ impl StatusBar {
         if self.anvil_running {
             right_spans.push(Span::styled(
                 "● anvil ",
-                Style::default().fg(Theme::GREEN).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Theme::GREEN)
+                    .add_modifier(Modifier::BOLD),
             ));
         }
 
@@ -120,29 +119,16 @@ impl StatusBar {
     fn get_hints(&self) -> Vec<(&str, &str)> {
         // Modal form modes have their own hints
         if self.anvil_transferring {
-            return vec![
-                ("j/k", "field"),
-                ("Enter", "send"),
-                ("Esc", "cancel"),
-            ];
+            return vec![("j/k", "field"), ("Enter", "send"), ("Esc", "cancel")];
         }
         if self.anvil_dealing {
-            return vec![
-                ("Enter", "deal"),
-                ("Esc", "cancel"),
-            ];
+            return vec![("Enter", "deal"), ("Esc", "cancel")];
         }
         if self.anvil_adding_token {
-            return vec![
-                ("Enter", "detect"),
-                ("Esc", "cancel"),
-            ];
+            return vec![("Enter", "detect"), ("Esc", "cancel")];
         }
         if self.anvil_editing_fork_url {
-            return vec![
-                ("Enter", "save"),
-                ("Esc", "cancel"),
-            ];
+            return vec![("Enter", "save"), ("Esc", "cancel")];
         }
 
         let mut hints = vec![("?", "help"), ("jk", "up/down"), ("hl", "tabs")];
@@ -152,8 +138,20 @@ impl StatusBar {
                 hints.extend([("n", "new"), ("i", "import"), ("r", "refresh")]);
             }
             PanelId::Anvil => {
-                hints.extend([("s", "start"), ("S", "stop"), ("f", "fork"), ("F", "fork url"), ("m", "mine"), ("t", "transfer")]);
-                hints.extend([("D", "deal"), ("E", "eth deal"), ("B", "detect slot"), ("a", "add token")]);
+                hints.extend([
+                    ("s", "start"),
+                    ("S", "stop"),
+                    ("f", "fork"),
+                    ("F", "fork url"),
+                    ("m", "mine"),
+                    ("t", "transfer"),
+                ]);
+                hints.extend([
+                    ("D", "deal"),
+                    ("E", "eth deal"),
+                    ("B", "detect slot"),
+                    ("a", "add token"),
+                ]);
             }
             PanelId::Forge => {
                 hints.extend([("b", "build"), ("t", "test"), ("c", "clear")]);

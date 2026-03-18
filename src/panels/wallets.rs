@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -82,21 +82,18 @@ impl WalletsPanel {
     // ── Drawing ──
 
     fn draw_tab_bar(&self, frame: &mut Frame, area: Rect) {
-        let tabs = Tabs::new(vec![
-            Line::from("Wallets"),
-            Line::from("Networks"),
-        ])
-        .select(match self.active_tab {
-            WalletTab::Wallets => 0,
-            WalletTab::Networks => 1,
-        })
-        .style(Style::default().fg(Theme::OVERLAY0))
-        .highlight_style(
-            Style::default()
-                .fg(Theme::BLUE)
-                .add_modifier(Modifier::BOLD),
-        )
-        .divider(Span::styled(" │ ", Style::default().fg(Theme::SURFACE1)));
+        let tabs = Tabs::new(vec![Line::from("Wallets"), Line::from("Networks")])
+            .select(match self.active_tab {
+                WalletTab::Wallets => 0,
+                WalletTab::Networks => 1,
+            })
+            .style(Style::default().fg(Theme::OVERLAY0))
+            .highlight_style(
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .divider(Span::styled(" │ ", Style::default().fg(Theme::SURFACE1)));
 
         frame.render_widget(tabs, area);
     }
@@ -111,9 +108,19 @@ impl WalletsPanel {
                 )),
                 Line::from(""),
                 Line::from(vec![
-                    Span::styled("n", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "n",
+                        Style::default()
+                            .fg(Theme::BLUE)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(" new  ", Style::default().fg(Theme::SUBTEXT0)),
-                    Span::styled("i", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        "i",
+                        Style::default()
+                            .fg(Theme::BLUE)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(" import", Style::default().fg(Theme::SUBTEXT0)),
                 ]),
             ])
@@ -130,7 +137,11 @@ impl WalletsPanel {
                 let addr_display = if w.address.is_empty() {
                     "🔒 locked".to_string()
                 } else if w.address.len() > 20 {
-                    format!("{}...{}", &w.address[..10], &w.address[w.address.len() - 8..])
+                    format!(
+                        "{}...{}",
+                        &w.address[..10],
+                        &w.address[w.address.len() - 8..]
+                    )
                 } else {
                     w.address.clone()
                 };
@@ -143,7 +154,9 @@ impl WalletsPanel {
                 };
 
                 let style = if i == self.wallet_selected {
-                    Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Theme::BLUE)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default().fg(Theme::TEXT)
                 };
@@ -159,11 +172,7 @@ impl WalletsPanel {
             })
             .collect();
 
-        let title = if self.loading {
-            " loading... "
-        } else {
-            ""
-        };
+        let title = if self.loading { " loading... " } else { "" };
 
         let list = List::new(items)
             .block(
@@ -219,7 +228,12 @@ impl WalletsPanel {
             lines.push(Line::from(""));
             let masked: String = "*".repeat(self.password_input.len());
             lines.push(Line::from(vec![
-                Span::styled("▸ Password: ", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    "▸ Password: ",
+                    Style::default()
+                        .fg(Theme::BLUE)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(masked, Style::default().fg(Theme::TEXT)),
                 Span::styled("█", Style::default().fg(Theme::BLUE)),
             ]));
@@ -252,7 +266,9 @@ impl WalletsPanel {
                 let is_active = n.name == self.active_network;
                 let indicator = if is_active { "● " } else { "  " };
                 let style = if i == self.network_selected {
-                    Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Theme::BLUE)
+                        .add_modifier(Modifier::BOLD)
                 } else if is_active {
                     Style::default().fg(Theme::GREEN)
                 } else {
@@ -268,7 +284,11 @@ impl WalletsPanel {
                 ListItem::new(Line::from(vec![
                     Span::styled(
                         indicator,
-                        Style::default().fg(if is_active { Theme::GREEN } else { Theme::SURFACE0 }),
+                        Style::default().fg(if is_active {
+                            Theme::GREEN
+                        } else {
+                            Theme::SURFACE0
+                        }),
                     ),
                     Span::styled(format!("{:<18} ", n.name), style),
                     Span::styled(url_short, Style::default().fg(Theme::SUBTEXT0)),
@@ -298,7 +318,9 @@ impl WalletsPanel {
         let mut lines = vec![
             Line::from(Span::styled(
                 "Add Network",
-                Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
             )),
             Line::from(""),
         ];
@@ -307,7 +329,9 @@ impl WalletsPanel {
             let is_active = i == self.add_field;
             let indicator = if is_active { "▸ " } else { "  " };
             let label_style = if is_active {
-                Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Theme::OVERLAY0)
             };
@@ -390,17 +414,17 @@ impl Component for WalletsPanel {
                 KeyCode::Char('j') | KeyCode::Char('k') => {
                     self.add_field = 1 - self.add_field;
                 }
-                KeyCode::Enter => {
-                    if !self.add_name_input.is_empty() && !self.add_url_input.is_empty() {
-                        let action = Action::AddNetwork {
-                            name: self.add_name_input.clone(),
-                            url: self.add_url_input.clone(),
-                        };
-                        self.adding_network = false;
-                        self.add_name_input.clear();
-                        self.add_url_input.clear();
-                        return Some(action);
-                    }
+                KeyCode::Enter
+                    if !self.add_name_input.is_empty() && !self.add_url_input.is_empty() =>
+                {
+                    let action = Action::AddNetwork {
+                        name: self.add_name_input.clone(),
+                        url: self.add_url_input.clone(),
+                    };
+                    self.adding_network = false;
+                    self.add_name_input.clear();
+                    self.add_url_input.clear();
+                    return Some(action);
                 }
                 KeyCode::Char(c) => {
                     if self.add_field == 0 {
@@ -501,24 +525,20 @@ impl Component for WalletsPanel {
                 }
                 return Some(Action::RefreshWallets);
             }
-            Action::Select => {
-                match self.active_tab {
-                    WalletTab::Wallets => {
-                        if !self.wallets.is_empty() {
-                            self.show_detail = !self.show_detail;
-                        }
-                    }
-                    WalletTab::Networks => {
-                        if let Some(net) = self.networks.get(self.network_selected) {
-                            return Some(Action::SelectNetwork(net.name.clone()));
-                        }
+            Action::Select => match self.active_tab {
+                WalletTab::Wallets => {
+                    if !self.wallets.is_empty() {
+                        self.show_detail = !self.show_detail;
                     }
                 }
-            }
-            Action::Back => {
-                if self.show_detail {
-                    self.show_detail = false;
+                WalletTab::Networks => {
+                    if let Some(net) = self.networks.get(self.network_selected) {
+                        return Some(Action::SelectNetwork(net.name.clone()));
+                    }
                 }
+            },
+            Action::Back if self.show_detail => {
+                self.show_detail = false;
             }
             Action::Up => match self.active_tab {
                 WalletTab::Wallets => {
@@ -589,7 +609,7 @@ impl Component for WalletsPanel {
 
         let chunks = Layout::vertical([
             Constraint::Length(1), // tab bar
-            Constraint::Min(1),   // content
+            Constraint::Min(1),    // content
         ])
         .split(inner);
 
@@ -598,11 +618,9 @@ impl Component for WalletsPanel {
         match self.active_tab {
             WalletTab::Wallets => {
                 if self.show_detail {
-                    let split = Layout::vertical([
-                        Constraint::Percentage(55),
-                        Constraint::Percentage(45),
-                    ])
-                    .split(chunks[1]);
+                    let split =
+                        Layout::vertical([Constraint::Percentage(55), Constraint::Percentage(45)])
+                            .split(chunks[1]);
                     self.draw_wallet_list(frame, split[0]);
                     self.draw_wallet_detail(frame, split[1]);
                 } else {

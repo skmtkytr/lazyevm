@@ -35,47 +35,93 @@ pub enum Action {
     WalletCreated(String),
     ImportWallet,
     WalletImported(String),
-    BalanceLoaded { address: String, balance: String },
-    UnlockWallet { name: String, password: String },
-    WalletAddressResolved { name: String, address: String },
+    BalanceLoaded {
+        address: String,
+        balance: String,
+    },
+    UnlockWallet {
+        name: String,
+        password: String,
+    },
+    WalletAddressResolved {
+        name: String,
+        address: String,
+    },
 
     // Network actions
     SelectNetwork(String),
-    NetworkChanged { name: String, url: String },
-    AddNetwork { name: String, url: String },
+    NetworkChanged {
+        name: String,
+        url: String,
+    },
+    AddNetwork {
+        name: String,
+        url: String,
+    },
     RemoveNetwork(String),
 
     // Anvil actions
     StartAnvil,
     StopAnvil,
-    AnvilStarted { port: u16 },
+    AnvilStarted {
+        port: u16,
+    },
     AnvilStopped,
     AnvilLog(String),
     AnvilAccounts(Vec<AnvilAccount>),
     MineBlock,
     BlockMined(u64),
     ResetAnvil,
-    AnvilTransfer { from_key: String, to: String, value: String, token: Option<String> },
+    AnvilTransfer {
+        from_key: String,
+        to: String,
+        value: String,
+        token: Option<String>,
+    },
     AnvilTransferDone(String),
     AnvilDumpState,
     AnvilLoadState,
     AnvilError(String),
 
     // Fork actions
-    StartAnvilFork { fork_url: String },
+    StartAnvilFork {
+        fork_url: String,
+    },
     SetForkUrl(String),
 
     // Token actions
-    RefreshTokenBalances { account: String },
-    TokenBalancesLoaded { account: String, balances: Vec<TokenBalance> },
-    AddCustomToken { address: String },
+    RefreshTokenBalances {
+        account: String,
+    },
+    TokenBalancesLoaded {
+        account: String,
+        balances: Vec<TokenBalance>,
+    },
+    AddCustomToken {
+        address: String,
+    },
     CustomTokenResolved(TokenEntry),
-    DealToken { token_address: String, to: String, amount: String, decimals: u8, balance_slot: u64 },
+    DealToken {
+        token_address: String,
+        to: String,
+        amount: String,
+        decimals: u8,
+        balance_slot: u64,
+    },
     DealTokenDone(String),
-    DealEth { to: String, amount: String },
+    DealEth {
+        to: String,
+        amount: String,
+    },
     DealEthDone(String),
-    DetectBalanceSlot { token_address: String, test_account: String },
-    BalanceSlotDetected { token_address: String, slot: u64 },
+    DetectBalanceSlot {
+        token_address: String,
+        test_account: String,
+    },
+    BalanceSlotDetected {
+        token_address: String,
+        slot: u64,
+    },
     RemoveToken(String),
 
     // Forge actions
@@ -83,7 +129,10 @@ pub enum Action {
     ForgeTest,
     ForgeScript(String),
     ForgeOutput(String),
-    ForgeDone { success: bool, summary: String },
+    ForgeDone {
+        success: bool,
+        summary: String,
+    },
     ForgeClear,
 
     // Cast actions

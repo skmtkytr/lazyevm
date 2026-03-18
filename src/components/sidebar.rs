@@ -1,9 +1,9 @@
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 use crate::panels::PanelId;
@@ -82,7 +82,11 @@ impl Sidebar {
                     .borders(Borders::ALL)
                     .border_style(Style::default().fg(border_color))
                     .title(" lazyevm ")
-                    .title_style(Style::default().fg(Theme::MAUVE).add_modifier(Modifier::BOLD)),
+                    .title_style(
+                        Style::default()
+                            .fg(Theme::MAUVE)
+                            .add_modifier(Modifier::BOLD),
+                    ),
             )
             .highlight_style(
                 Style::default()

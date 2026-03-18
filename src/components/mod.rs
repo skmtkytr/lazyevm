@@ -2,8 +2,8 @@ pub mod sidebar;
 pub mod status_bar;
 
 use crossterm::event::KeyEvent;
-use ratatui::Frame;
 use ratatui::layout::Rect;
+use ratatui::Frame;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::action::Action;

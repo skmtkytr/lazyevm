@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Tabs, Wrap},
+    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -179,7 +179,9 @@ impl CastPanel {
         for (i, (label, value)) in fields.iter().enumerate() {
             let is_active = self.editing && i == self.active_field;
             let label_style = if is_active {
-                Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Theme::OVERLAY0)
             };
@@ -298,11 +300,9 @@ impl Component for CastPanel {
 
     fn update(&mut self, action: &Action) -> Option<Action> {
         match action {
-            Action::Select => {
-                if !self.editing {
-                    self.editing = true;
-                    self.active_field = 0;
-                }
+            Action::Select if !self.editing => {
+                self.editing = true;
+                self.active_field = 0;
             }
             Action::CastResult(result) => {
                 let cmd = match self.active_tab {
@@ -365,7 +365,7 @@ impl Component for CastPanel {
         frame.render_widget(block, area);
 
         let chunks = Layout::vertical([
-            Constraint::Length(1),  // tabs
+            Constraint::Length(1), // tabs
             Constraint::Min(8),    // form
             Constraint::Length(5), // result
         ])

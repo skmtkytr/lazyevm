@@ -59,10 +59,13 @@ impl Config {
         if let Ok(rpc) = std::env::var("ETH_RPC_URL") {
             // Add as first entry and set active
             let name = "ENV".to_string();
-            config.networks.list.insert(0, Network {
-                name: name.clone(),
-                url: rpc,
-            });
+            config.networks.list.insert(
+                0,
+                Network {
+                    name: name.clone(),
+                    url: rpc,
+                },
+            );
             config.networks.active = name;
         }
         let _ = config.save();
@@ -142,7 +145,10 @@ impl Config {
             }
         }
         // Fallback: resolve from network name
-        let fork_name = self.anvil.fork_network.as_deref()
+        let fork_name = self
+            .anvil
+            .fork_network
+            .as_deref()
             .unwrap_or("Ethereum Mainnet");
         self.networks
             .list

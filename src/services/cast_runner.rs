@@ -7,22 +7,22 @@ const CAST_TIMEOUT: Duration = Duration::from_secs(30);
 /// Well-known ERC20 balance storage slots (address -> slot)
 const KNOWN_SLOTS: &[(&str, u64)] = &[
     // Major stablecoins
-    ("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 9),  // USDC
-    ("0xdAC17F958D2ee523a2206206994597C13D831ec7", 2),  // USDT
-    ("0x6B175474E89094C44Da98b954EedeAC495271d0F", 2),  // DAI
-    ("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 3),  // WETH
+    ("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 9), // USDC
+    ("0xdAC17F958D2ee523a2206206994597C13D831ec7", 2), // USDT
+    ("0x6B175474E89094C44Da98b954EedeAC495271d0F", 2), // DAI
+    ("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 3), // WETH
     // DeFi tokens
-    ("0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984", 4),  // UNI
-    ("0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9", 0),  // AAVE
-    ("0xc00e94Cb662C3520282E6f5717214004A7f26888", 1),  // COMP
-    ("0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2", 1),  // MKR
-    ("0x514910771AF9Ca656af840dff83E8264EcF986CA", 1),  // LINK
-    ("0x6B3595068778DD592e39A122f4f5a5cF09C90fE2", 0),  // SUSHI
+    ("0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984", 4), // UNI
+    ("0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9", 0), // AAVE
+    ("0xc00e94Cb662C3520282E6f5717214004A7f26888", 1), // COMP
+    ("0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2", 1), // MKR
+    ("0x514910771AF9Ca656af840dff83E8264EcF986CA", 1), // LINK
+    ("0x6B3595068778DD592e39A122f4f5a5cF09C90fE2", 0), // SUSHI
     // Wrapped / bridged
-    ("0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", 0),  // WBTC
-    ("0x4Fabb145d64652a948d72533023f6E7A623C7C53", 1),  // BUSD
-    ("0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE", 0),  // SHIB
-    ("0x853d955aCEf822Db058eb8505911ED77F175b99e", 0),  // FRAX
+    ("0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", 0), // WBTC
+    ("0x4Fabb145d64652a948d72533023f6E7A623C7C53", 1), // BUSD
+    ("0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE", 0), // SHIB
+    ("0x853d955aCEf822Db058eb8505911ED77F175b99e", 0), // FRAX
 ];
 
 pub struct CastRunner {
@@ -40,8 +40,9 @@ impl CastRunner {
     async fn run_cast(cmd: &mut Command) -> color_eyre::Result<String> {
         let output = tokio::time::timeout(CAST_TIMEOUT, cmd.output())
             .await
-            .map_err(|_| eyre::eyre!("cast command timed out after {}s", CAST_TIMEOUT.as_secs()))?
-            ?;
+            .map_err(|_| {
+                eyre::eyre!("cast command timed out after {}s", CAST_TIMEOUT.as_secs())
+            })??;
 
         if !output.status.success() {
             let err = String::from_utf8_lossy(&output.stderr);
@@ -52,12 +53,7 @@ impl CastRunner {
     }
 
     /// Run `cast call`
-    pub async fn call(
-        &self,
-        to: &str,
-        sig: &str,
-        args: &[String],
-    ) -> color_eyre::Result<String> {
+    pub async fn call(&self, to: &str, sig: &str, args: &[String]) -> color_eyre::Result<String> {
         let mut cmd = Command::new("cast");
         cmd.args(["call", to, sig]);
         for arg in args {
@@ -68,12 +64,7 @@ impl CastRunner {
     }
 
     /// Run `cast send`
-    pub async fn send(
-        &self,
-        to: &str,
-        sig: &str,
-        args: &[String],
-    ) -> color_eyre::Result<String> {
+    pub async fn send(&self, to: &str, sig: &str, args: &[String]) -> color_eyre::Result<String> {
         let mut cmd = Command::new("cast");
         cmd.args(["send", to, sig]);
         for arg in args {
@@ -134,7 +125,8 @@ impl CastRunner {
 
     /// Query ERC20 token balance
     pub async fn token_balance(&self, token: &str, account: &str) -> color_eyre::Result<String> {
-        self.call(token, "balanceOf(address)(uint256)", &[account.to_string()]).await
+        self.call(token, "balanceOf(address)(uint256)", &[account.to_string()])
+            .await
     }
 
     /// Query ERC20 token symbol
@@ -150,7 +142,10 @@ impl CastRunner {
     /// Query ERC20 token decimals
     pub async fn token_decimals(&self, token: &str) -> color_eyre::Result<u8> {
         let result = self.call(token, "decimals()(uint8)", &[]).await?;
-        result.trim().parse::<u8>().map_err(|e| eyre::eyre!("parse decimals: {}", e))
+        result
+            .trim()
+            .parse::<u8>()
+            .map_err(|e| eyre::eyre!("parse decimals: {}", e))
     }
 
     /// Deal token: set balance via anvil_setStorageAt, then verify
@@ -172,13 +167,15 @@ impl CastRunner {
         // 1. Compute storage key: keccak256(abi.encode(account, slot))
         let mut cmd = Command::new("cast");
         cmd.args(["index", "address", account, &balance_slot.to_string()]);
-        let storage_key = Self::run_cast(&mut cmd).await
+        let storage_key = Self::run_cast(&mut cmd)
+            .await
             .map_err(|e| eyre::eyre!("cast index failed: {}", e))?;
 
         // 2. Convert amount to uint256 hex
         let mut cmd = Command::new("cast");
         cmd.args(["to-uint256", amount_raw]);
-        let hex_value = Self::run_cast(&mut cmd).await
+        let hex_value = Self::run_cast(&mut cmd)
+            .await
             .map_err(|e| eyre::eyre!("cast to-uint256 failed: {}", e))?;
 
         // 3. Set storage via anvil_setStorageAt
@@ -192,7 +189,8 @@ impl CastRunner {
             "--rpc-url",
             &self.rpc_url,
         ]);
-        Self::run_cast(&mut cmd).await
+        Self::run_cast(&mut cmd)
+            .await
             .map_err(|e| eyre::eyre!("anvil_setStorageAt failed: {}", e))?;
 
         // 4. Verify: read back balance
@@ -202,7 +200,8 @@ impl CastRunner {
                     return Err(eyre::eyre!(
                         "Deal may have failed: balance is 0 after setting {}. \
                          The balance_slot ({}) might be incorrect.",
-                        amount_raw, balance_slot
+                        amount_raw,
+                        balance_slot
                     ));
                 }
                 Ok(format!("Deal set (verified balance: {})", new_bal.trim()))
@@ -227,7 +226,8 @@ impl CastRunner {
         // Convert to hex
         let mut cmd = Command::new("cast");
         cmd.args(["to-uint256", amount_wei]);
-        let hex_value = Self::run_cast(&mut cmd).await
+        let hex_value = Self::run_cast(&mut cmd)
+            .await
             .map_err(|e| eyre::eyre!("cast to-uint256 failed: {}", e))?;
 
         let mut cmd = Command::new("cast");
@@ -239,7 +239,8 @@ impl CastRunner {
             "--rpc-url",
             &self.rpc_url,
         ]);
-        Self::run_cast(&mut cmd).await
+        Self::run_cast(&mut cmd)
+            .await
             .map_err(|e| eyre::eyre!("anvil_setBalance failed: {}", e))?;
 
         Ok(format!("ETH balance set for {}", account))
@@ -258,7 +259,9 @@ impl CastRunner {
         }
 
         // Save original balance to restore
-        let original = self.token_balance(token, test_account).await
+        let original = self
+            .token_balance(token, test_account)
+            .await
             .unwrap_or_else(|_| "0".to_string());
 
         let test_value = "1337420";
@@ -283,9 +286,13 @@ impl CastRunner {
             // Set storage
             let mut cmd = Command::new("cast");
             cmd.args([
-                "rpc", "anvil_setStorageAt", token,
-                &storage_key, &hex_value,
-                "--rpc-url", &self.rpc_url,
+                "rpc",
+                "anvil_setStorageAt",
+                token,
+                &storage_key,
+                &hex_value,
+                "--rpc-url",
+                &self.rpc_url,
             ]);
             if Self::run_cast(&mut cmd).await.is_err() {
                 continue;
@@ -300,9 +307,13 @@ impl CastRunner {
                     if let Ok(orig_hex) = Self::run_cast(&mut cmd).await {
                         let mut cmd = Command::new("cast");
                         cmd.args([
-                            "rpc", "anvil_setStorageAt", token,
-                            &storage_key, &orig_hex,
-                            "--rpc-url", &self.rpc_url,
+                            "rpc",
+                            "anvil_setStorageAt",
+                            token,
+                            &storage_key,
+                            &orig_hex,
+                            "--rpc-url",
+                            &self.rpc_url,
                         ]);
                         let _ = Self::run_cast(&mut cmd).await;
                     }
@@ -320,8 +331,7 @@ impl CastRunner {
         cmd.args(["chain-id", "--rpc-url", url]);
         let result = tokio::time::timeout(Duration::from_secs(10), cmd.output())
             .await
-            .map_err(|_| eyre::eyre!("RPC connection timed out: {}", url))?
-            ?;
+            .map_err(|_| eyre::eyre!("RPC connection timed out: {}", url))??;
 
         if !result.status.success() {
             let err = String::from_utf8_lossy(&result.stderr);
@@ -396,13 +406,7 @@ impl CastRunner {
     /// Run `cast balance`
     pub async fn balance(&self, address: &str) -> color_eyre::Result<String> {
         let mut cmd = Command::new("cast");
-        cmd.args([
-            "balance",
-            address,
-            "--ether",
-            "--rpc-url",
-            &self.rpc_url,
-        ]);
+        cmd.args(["balance", address, "--ether", "--rpc-url", &self.rpc_url]);
         let balance = Self::run_cast(&mut cmd).await?;
         Ok(format!("{} ETH", balance))
     }
@@ -411,7 +415,8 @@ impl CastRunner {
 /// Look up a well-known balance slot by token address (case-insensitive)
 pub fn lookup_known_slot(token: &str) -> Option<u64> {
     let token_lower = token.to_lowercase();
-    KNOWN_SLOTS.iter()
+    KNOWN_SLOTS
+        .iter()
         .find(|(addr, _)| addr.to_lowercase() == token_lower)
         .map(|(_, slot)| *slot)
 }

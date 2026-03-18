@@ -1,10 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -174,7 +174,11 @@ impl AnvilPanel {
 
     pub fn update_token_balances(&mut self, balances: &[TokenBalance]) {
         for bal in balances {
-            if let Some(token) = self.tokens.iter_mut().find(|t| t.address == bal.token_address) {
+            if let Some(token) = self
+                .tokens
+                .iter_mut()
+                .find(|t| t.address == bal.token_address)
+            {
                 token.balance = bal.balance.clone();
                 token.raw_balance = bal.raw_balance.clone();
                 token.status = bal.status.clone();
@@ -209,21 +213,24 @@ impl AnvilPanel {
     }
 
     fn draw_status(&self, frame: &mut Frame, area: Rect) {
-        let status_color = if self.running { Theme::GREEN } else { Theme::RED };
+        let status_color = if self.running {
+            Theme::GREEN
+        } else {
+            Theme::RED
+        };
         let status_text = if self.running { "Running" } else { "Stopped" };
 
         let mut spans = vec![
             Span::styled("Status: ", Style::default().fg(Theme::OVERLAY0)),
             Span::styled(
                 status_text,
-                Style::default().fg(status_color).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(status_color)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw("  "),
             Span::styled("Port: ", Style::default().fg(Theme::OVERLAY0)),
-            Span::styled(
-                self.port.to_string(),
-                Style::default().fg(Theme::TEXT),
-            ),
+            Span::styled(self.port.to_string(), Style::default().fg(Theme::TEXT)),
             Span::raw("  "),
             Span::styled("Block: ", Style::default().fg(Theme::OVERLAY0)),
             Span::styled(
@@ -236,18 +243,19 @@ impl AnvilPanel {
             spans.push(Span::raw("  "));
             spans.push(Span::styled(
                 "FORK",
-                Style::default().fg(Theme::MAUVE).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Theme::MAUVE)
+                    .add_modifier(Modifier::BOLD),
             ));
         }
 
         let lines = vec![Line::from(spans)];
 
-        let paragraph = Paragraph::new(lines)
-            .block(
-                Block::default()
-                    .borders(Borders::BOTTOM)
-                    .border_style(Style::default().fg(Theme::SURFACE0)),
-            );
+        let paragraph = Paragraph::new(lines).block(
+            Block::default()
+                .borders(Borders::BOTTOM)
+                .border_style(Style::default().fg(Theme::SURFACE0)),
+        );
 
         frame.render_widget(paragraph, area);
     }
@@ -301,8 +309,7 @@ impl AnvilPanel {
             })
             .collect();
 
-        let list = List::new(items)
-            .highlight_style(Style::default().bg(Theme::SURFACE0));
+        let list = List::new(items).highlight_style(Style::default().bg(Theme::SURFACE0));
 
         frame.render_stateful_widget(list, area, &mut self.list_state);
     }
@@ -346,7 +353,11 @@ impl AnvilPanel {
                 };
 
                 let addr_short = if t.address.len() > 14 {
-                    format!("{}...{}", &t.address[..6], &t.address[t.address.len() - 4..])
+                    format!(
+                        "{}...{}",
+                        &t.address[..6],
+                        &t.address[t.address.len() - 4..]
+                    )
                 } else {
                     t.address.clone()
                 };
@@ -361,19 +372,28 @@ impl AnvilPanel {
                     TokenBalanceStatus::Unknown => ("-".to_string(), Theme::OVERLAY0),
                 };
 
-                let slot_indicator = if t.balance_slot.is_some() { "" } else { " [no slot]" };
+                let slot_indicator = if t.balance_slot.is_some() {
+                    ""
+                } else {
+                    " [no slot]"
+                };
 
                 ListItem::new(Line::from(vec![
-                    Span::styled(format!("{:<6} ", t.symbol), style.add_modifier(Modifier::BOLD)),
-                    Span::styled(format!("{:<14} ", balance_text), Style::default().fg(balance_color)),
+                    Span::styled(
+                        format!("{:<6} ", t.symbol),
+                        style.add_modifier(Modifier::BOLD),
+                    ),
+                    Span::styled(
+                        format!("{:<14} ", balance_text),
+                        Style::default().fg(balance_color),
+                    ),
                     Span::styled(addr_short, Style::default().fg(Theme::OVERLAY0)),
                     Span::styled(slot_indicator, Style::default().fg(Theme::RED)),
                 ]))
             })
             .collect();
 
-        let list = List::new(items)
-            .highlight_style(Style::default().bg(Theme::SURFACE0));
+        let list = List::new(items).highlight_style(Style::default().bg(Theme::SURFACE0));
 
         frame.render_stateful_widget(list, area, &mut self.token_list_state);
     }
@@ -409,7 +429,12 @@ impl AnvilPanel {
         lines.push(Line::from(vec![
             Span::styled("Fork Mode:   ", Style::default().fg(Theme::OVERLAY0)),
             if self.fork_mode {
-                Span::styled("ON", Style::default().fg(Theme::GREEN).add_modifier(Modifier::BOLD))
+                Span::styled(
+                    "ON",
+                    Style::default()
+                        .fg(Theme::GREEN)
+                        .add_modifier(Modifier::BOLD),
+                )
             } else {
                 Span::styled("OFF", Style::default().fg(Theme::RED))
             },
@@ -456,14 +481,20 @@ impl AnvilPanel {
 
         let field_style = |idx: usize| -> Style {
             if self.transfer_field == idx {
-                Style::default().fg(Theme::YELLOW).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Theme::YELLOW)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Theme::TEXT)
             }
         };
 
         let cursor = |idx: usize| -> &str {
-            if self.transfer_field == idx { "\u{2588}" } else { "" }
+            if self.transfer_field == idx {
+                "\u{2588}"
+            } else {
+                ""
+            }
         };
 
         let token_line = Line::from(vec![
@@ -486,7 +517,11 @@ impl AnvilPanel {
         ]);
         frame.render_widget(Paragraph::new(to_line), chunks[1]);
 
-        let amount_suffix = if self.transfer_token.is_empty() { " ETH" } else { " (raw)" };
+        let amount_suffix = if self.transfer_token.is_empty() {
+            " ETH"
+        } else {
+            " (raw)"
+        };
         let amount_line = Line::from(vec![
             Span::styled("  Amt: ", Style::default().fg(Theme::OVERLAY0)),
             Span::styled(
@@ -497,11 +532,26 @@ impl AnvilPanel {
         frame.render_widget(Paragraph::new(amount_line), chunks[2]);
 
         let help = Line::from(vec![
-            Span::styled(" j/k", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                " j/k",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" switch ", Style::default().fg(Theme::SUBTEXT0)),
-            Span::styled("Enter", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" send ", Style::default().fg(Theme::SUBTEXT0)),
-            Span::styled("Esc", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" cancel", Style::default().fg(Theme::SUBTEXT0)),
         ]);
         frame.render_widget(Paragraph::new(help), chunks[4]);
@@ -512,7 +562,8 @@ impl AnvilPanel {
         let token_symbol = if is_eth_mode {
             "ETH"
         } else {
-            self.tokens.get(self.token_selected)
+            self.tokens
+                .get(self.token_selected)
                 .map(|t| t.symbol.as_str())
                 .unwrap_or("?")
         };
@@ -541,7 +592,9 @@ impl AnvilPanel {
             Span::styled("Amount: ", Style::default().fg(Theme::OVERLAY0)),
             Span::styled(
                 format!("{}\u{2588}", self.deal_amount),
-                Style::default().fg(Theme::MAUVE).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Theme::MAUVE)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::styled(
                 format!(" {}", token_symbol),
@@ -551,9 +604,19 @@ impl AnvilPanel {
         frame.render_widget(Paragraph::new(amount_line), chunks[0]);
 
         let help = Line::from(vec![
-            Span::styled("Enter", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" deal ", Style::default().fg(Theme::SUBTEXT0)),
-            Span::styled("Esc", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" cancel", Style::default().fg(Theme::SUBTEXT0)),
         ]);
         frame.render_widget(Paragraph::new(help), chunks[2]);
@@ -561,12 +624,10 @@ impl AnvilPanel {
 
     fn draw_add_token_form(&self, frame: &mut Frame, area: Rect) {
         let is_valid = CastRunner::is_valid_address(&self.add_token_address);
-        let border_color = if self.add_token_address.is_empty() {
-            Theme::GREEN
-        } else if is_valid {
-            Theme::GREEN
-        } else {
+        let border_color = if !self.add_token_address.is_empty() && !is_valid {
             Theme::YELLOW
+        } else {
+            Theme::GREEN
         };
 
         let block = Block::default()
@@ -593,7 +654,9 @@ impl AnvilPanel {
             Span::styled("Address: ", Style::default().fg(Theme::OVERLAY0)),
             Span::styled(
                 format!("{}\u{2588}", self.add_token_address),
-                Style::default().fg(Theme::GREEN).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Theme::GREEN)
+                    .add_modifier(Modifier::BOLD),
             ),
         ]);
         frame.render_widget(Paragraph::new(addr_line), chunks[0]);
@@ -608,9 +671,19 @@ impl AnvilPanel {
         }
 
         let help = Line::from(vec![
-            Span::styled("Enter", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" detect ", Style::default().fg(Theme::SUBTEXT0)),
-            Span::styled("Esc", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" cancel", Style::default().fg(Theme::SUBTEXT0)),
         ]);
         frame.render_widget(Paragraph::new(help), chunks[2]);
@@ -621,11 +694,7 @@ impl AnvilPanel {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Theme::SKY))
             .title(" Edit Fork URL ")
-            .title_style(
-                Style::default()
-                    .fg(Theme::SKY)
-                    .add_modifier(Modifier::BOLD),
-            );
+            .title_style(Style::default().fg(Theme::SKY).add_modifier(Modifier::BOLD));
 
         let inner = block.inner(area);
         frame.render_widget(block, area);
@@ -653,9 +722,19 @@ impl AnvilPanel {
         frame.render_widget(Paragraph::new(hint), chunks[1]);
 
         let help = Line::from(vec![
-            Span::styled("Enter", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" save ", Style::default().fg(Theme::SUBTEXT0)),
-            Span::styled("Esc", Style::default().fg(Theme::BLUE).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Theme::BLUE)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::styled(" cancel", Style::default().fg(Theme::SUBTEXT0)),
         ]);
         frame.render_widget(Paragraph::new(help), chunks[2]);
@@ -719,7 +798,8 @@ impl Component for AnvilPanel {
                                 } else {
                                     self.dealing = false;
                                     return Some(Action::Error(
-                                        "Token has no balance_slot. Press 'B' to detect.".to_string()
+                                        "Token has no balance_slot. Press 'B' to detect."
+                                            .to_string(),
                                     ));
                                 }
                             }
@@ -762,7 +842,7 @@ impl Component for AnvilPanel {
                     }
                     if !CastRunner::is_valid_address(&self.add_token_address) {
                         return Some(Action::Error(
-                            "Invalid address (need 0x + 40 hex chars)".to_string()
+                            "Invalid address (need 0x + 40 hex chars)".to_string(),
                         ));
                     }
                     let action = Action::AddCustomToken {
@@ -800,8 +880,14 @@ impl Component for AnvilPanel {
                         self.fork_url.clear();
                         return Some(Action::SetForkUrl(String::new()));
                     }
-                    if !url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("ws://") && !url.starts_with("wss://") {
-                        return Some(Action::Error("URL must start with http://, https://, ws://, or wss://".to_string()));
+                    if !url.starts_with("http://")
+                        && !url.starts_with("https://")
+                        && !url.starts_with("ws://")
+                        && !url.starts_with("wss://")
+                    {
+                        return Some(Action::Error(
+                            "URL must start with http://, https://, ws://, or wss://".to_string(),
+                        ));
                     }
                     self.fork_url = url.clone();
                     return Some(Action::SetForkUrl(url));
@@ -857,18 +943,14 @@ impl Component for AnvilPanel {
                 }
                 KeyCode::Char(c) => {
                     match self.transfer_field {
-                        0 => {
-                            if c.is_ascii_hexdigit() || c == 'x' || c == 'X' {
-                                self.transfer_token.push(c);
-                            }
+                        0 if c.is_ascii_hexdigit() || c == 'x' || c == 'X' => {
+                            self.transfer_token.push(c);
                         }
                         1 => {
                             self.transfer_to.push(c);
                         }
-                        2 => {
-                            if c.is_ascii_digit() || c == '.' {
-                                self.transfer_amount.push(c);
-                            }
+                        2 if c.is_ascii_digit() || c == '.' => {
+                            self.transfer_amount.push(c);
                         }
                         _ => {}
                     }
@@ -876,9 +958,15 @@ impl Component for AnvilPanel {
                 }
                 KeyCode::Backspace => {
                     match self.transfer_field {
-                        0 => { self.transfer_token.pop(); }
-                        1 => { self.transfer_to.pop(); }
-                        2 => { self.transfer_amount.pop(); }
+                        0 => {
+                            self.transfer_token.pop();
+                        }
+                        1 => {
+                            self.transfer_to.pop();
+                        }
+                        2 => {
+                            self.transfer_amount.pop();
+                        }
                         _ => {}
                     }
                     return Some(Action::None);
@@ -904,7 +992,9 @@ impl Component for AnvilPanel {
             }
             KeyCode::Char('f') => {
                 if !self.running && !self.fork_url.is_empty() {
-                    Some(Action::StartAnvilFork { fork_url: self.fork_url.clone() })
+                    Some(Action::StartAnvilFork {
+                        fork_url: self.fork_url.clone(),
+                    })
                 } else {
                     None
                 }
@@ -949,7 +1039,8 @@ impl Component for AnvilPanel {
                 }
             }
             KeyCode::Char('D') => {
-                if self.running && self.fork_mode
+                if self.running
+                    && self.fork_mode
                     && self.active_tab == AnvilTab::Tokens
                     && !self.tokens.is_empty()
                     && !self.accounts.is_empty()
@@ -984,7 +1075,8 @@ impl Component for AnvilPanel {
             }
             KeyCode::Char('B') => {
                 // Auto-detect balance slot
-                if self.running && self.fork_mode
+                if self.running
+                    && self.fork_mode
                     && self.active_tab == AnvilTab::Tokens
                     && !self.tokens.is_empty()
                 {
@@ -1105,70 +1197,67 @@ impl Component for AnvilPanel {
                 self.logs.push(format!("ETH Deal: {}", msg));
                 return Some(Action::SetStatus(msg.clone()));
             }
-            Action::BalanceSlotDetected { ref token_address, slot } => {
+            Action::BalanceSlotDetected {
+                ref token_address,
+                slot,
+            } => {
                 self.update_token_slot(token_address, *slot);
-                self.logs.push(format!("Detected slot {} for {}", slot, token_address));
-                return Some(Action::SetStatus(
-                    format!("Balance slot {} detected", slot),
-                ));
+                self.logs
+                    .push(format!("Detected slot {} for {}", slot, token_address));
+                return Some(Action::SetStatus(format!("Balance slot {} detected", slot)));
             }
             Action::AnvilError(err) => {
                 self.logs.push(format!("Error: {}", err));
                 return Some(Action::Error(err.clone()));
             }
-            Action::Up => {
-                match self.active_tab {
-                    AnvilTab::Accounts if !self.accounts.is_empty() => {
-                        let prev_selected = self.selected;
-                        self.selected = self.selected.saturating_sub(1);
-                        self.list_state.select(Some(self.selected));
-                        if self.fork_mode && prev_selected != self.selected {
-                            self.fire_refresh_tokens();
-                        }
+            Action::Up => match self.active_tab {
+                AnvilTab::Accounts if !self.accounts.is_empty() => {
+                    let prev_selected = self.selected;
+                    self.selected = self.selected.saturating_sub(1);
+                    self.list_state.select(Some(self.selected));
+                    if self.fork_mode && prev_selected != self.selected {
+                        self.fire_refresh_tokens();
                     }
-                    AnvilTab::Tokens if !self.tokens.is_empty() => {
-                        self.token_selected = self.token_selected.saturating_sub(1);
-                        self.token_list_state.select(Some(self.token_selected));
-                    }
-                    AnvilTab::Logs => {
-                        self.log_scroll = self.log_scroll.saturating_sub(1);
-                    }
-                    _ => {}
                 }
-            }
-            Action::Down => {
-                match self.active_tab {
-                    AnvilTab::Accounts if !self.accounts.is_empty() => {
-                        let prev_selected = self.selected;
-                        self.selected = (self.selected + 1).min(self.accounts.len() - 1);
-                        self.list_state.select(Some(self.selected));
-                        if self.fork_mode && prev_selected != self.selected {
-                            self.fire_refresh_tokens();
-                        }
-                    }
-                    AnvilTab::Tokens if !self.tokens.is_empty() => {
-                        self.token_selected = (self.token_selected + 1).min(self.tokens.len() - 1);
-                        self.token_list_state.select(Some(self.token_selected));
-                    }
-                    AnvilTab::Logs => {
-                        self.log_scroll += 1;
-                    }
-                    _ => {}
+                AnvilTab::Tokens if !self.tokens.is_empty() => {
+                    self.token_selected = self.token_selected.saturating_sub(1);
+                    self.token_list_state.select(Some(self.token_selected));
                 }
-            }
+                AnvilTab::Logs => {
+                    self.log_scroll = self.log_scroll.saturating_sub(1);
+                }
+                _ => {}
+            },
+            Action::Down => match self.active_tab {
+                AnvilTab::Accounts if !self.accounts.is_empty() => {
+                    let prev_selected = self.selected;
+                    self.selected = (self.selected + 1).min(self.accounts.len() - 1);
+                    self.list_state.select(Some(self.selected));
+                    if self.fork_mode && prev_selected != self.selected {
+                        self.fire_refresh_tokens();
+                    }
+                }
+                AnvilTab::Tokens if !self.tokens.is_empty() => {
+                    self.token_selected = (self.token_selected + 1).min(self.tokens.len() - 1);
+                    self.token_list_state.select(Some(self.token_selected));
+                }
+                AnvilTab::Logs => {
+                    self.log_scroll += 1;
+                }
+                _ => {}
+            },
             Action::NextTab => {
                 let prev = self.active_tab;
                 self.active_tab = self.active_tab.next();
-                if self.active_tab == AnvilTab::Tokens && self.fork_mode && prev != AnvilTab::Tokens {
+                if self.active_tab == AnvilTab::Tokens && self.fork_mode && prev != AnvilTab::Tokens
+                {
                     self.fire_refresh_tokens();
                 }
             }
-            Action::PrevTab => {
-                match self.active_tab.prev() {
-                    None => return Some(Action::FocusSidebar),
-                    Some(tab) => self.active_tab = tab,
-                }
-            }
+            Action::PrevTab => match self.active_tab.prev() {
+                None => return Some(Action::FocusSidebar),
+                Some(tab) => self.active_tab = tab,
+            },
             _ => {}
         }
         None
@@ -1191,7 +1280,7 @@ impl Component for AnvilPanel {
         let chunks = Layout::vertical([
             Constraint::Length(2), // status
             Constraint::Length(1), // tabs
-            Constraint::Min(1),   // content
+            Constraint::Min(1),    // content
         ])
         .split(inner);
 

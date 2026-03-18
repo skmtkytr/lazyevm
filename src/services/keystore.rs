@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
 use crate::action::WalletEntry;
@@ -60,7 +60,7 @@ impl KeystoreService {
     }
 
     /// Try to resolve address: cast wallet address (empty pw) → keystore JSON → empty
-    async fn resolve_address(name: &str, keystore_dir: &PathBuf) -> Option<String> {
+    async fn resolve_address(name: &str, keystore_dir: &Path) -> Option<String> {
         // 1. Try `cast wallet address --account <name> --password ""`
         if let Some(addr) = Self::try_cast_wallet_address(name, "").await {
             return Some(addr);
@@ -78,7 +78,14 @@ impl KeystoreService {
     /// Try `cast wallet address` with a given password
     async fn try_cast_wallet_address(name: &str, password: &str) -> Option<String> {
         let output = Command::new("cast")
-            .args(["wallet", "address", "--account", name, "--password", password])
+            .args([
+                "wallet",
+                "address",
+                "--account",
+                name,
+                "--password",
+                password,
+            ])
             .output()
             .await
             .ok()?;
@@ -98,7 +105,14 @@ impl KeystoreService {
     /// Try to unlock a wallet with a specific password and return address
     pub async fn unlock_wallet(name: &str, password: &str) -> color_eyre::Result<String> {
         let output = Command::new("cast")
-            .args(["wallet", "address", "--account", name, "--password", password])
+            .args([
+                "wallet",
+                "address",
+                "--account",
+                name,
+                "--password",
+                password,
+            ])
             .output()
             .await?;
 

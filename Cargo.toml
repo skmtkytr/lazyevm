@@ -3,6 +3,11 @@ name = "lazyevm"
 version = "0.1.0"
 edition = "2021"
 description = "A lazygit-style TUI for Foundry EVM development tools"
+license = "MIT"
+repository = "https://github.com/skmtkytr/lazyevm"
+readme = "README.md"
+keywords = ["ethereum", "foundry", "tui", "anvil", "evm"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 ratatui = "0.29"

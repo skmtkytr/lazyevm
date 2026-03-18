@@ -21,19 +21,15 @@ impl EventHandler {
 
         tokio::spawn(async move {
             let mut reader = EventStream::new();
-            let mut tick_interval =
-                tokio::time::interval(Duration::from_millis(tick_rate_ms));
-            let mut render_interval =
-                tokio::time::interval(Duration::from_millis(render_rate_ms));
+            let mut tick_interval = tokio::time::interval(Duration::from_millis(tick_rate_ms));
+            let mut render_interval = tokio::time::interval(Duration::from_millis(render_rate_ms));
 
             loop {
                 tokio::select! {
                     event = reader.next() => {
                         match event {
-                            Some(Ok(CrosstermEvent::Key(key))) => {
-                                if key.kind == KeyEventKind::Press {
-                                    let _ = tx.send(Event::Key(key));
-                                }
+                            Some(Ok(CrosstermEvent::Key(key))) if key.kind == KeyEventKind::Press => {
+                                let _ = tx.send(Event::Key(key));
                             }
                             Some(Ok(CrosstermEvent::Resize(w, h))) => {
                                 let _ = tx.send(Event::Resize(w, h));

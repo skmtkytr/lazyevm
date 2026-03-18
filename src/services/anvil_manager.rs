@@ -115,7 +115,10 @@ impl AnvilManager {
                     parsing_keys = true;
                     continue;
                 }
-                if line.contains("Wallet") || line.contains("Base Fee") || line.contains("Listening") {
+                if line.contains("Wallet")
+                    || line.contains("Base Fee")
+                    || line.contains("Listening")
+                {
                     parsing_accounts = false;
                     parsing_keys = false;
 
@@ -159,7 +162,9 @@ impl AnvilManager {
 
             // stdout EOF — process exited
             if !started {
-                let _ = tx_stdout.send(Action::AnvilError("Anvil process exited unexpectedly".to_string()));
+                let _ = tx_stdout.send(Action::AnvilError(
+                    "Anvil process exited unexpectedly".to_string(),
+                ));
             }
             let _ = tx_stdout.send(Action::AnvilStopped);
         });
@@ -193,8 +198,10 @@ impl AnvilManager {
         self.fork_url = Some(fork_url.to_string());
 
         let mut child = Command::new("anvil")
-            .arg("--port").arg(port.to_string())
-            .arg("--fork-url").arg(fork_url)
+            .arg("--port")
+            .arg(port.to_string())
+            .arg("--fork-url")
+            .arg(fork_url)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true)
@@ -227,7 +234,10 @@ impl AnvilManager {
                     parsing_keys = true;
                     continue;
                 }
-                if line.contains("Wallet") || line.contains("Base Fee") || line.contains("Listening") {
+                if line.contains("Wallet")
+                    || line.contains("Base Fee")
+                    || line.contains("Listening")
+                {
                     parsing_accounts = false;
                     parsing_keys = false;
 
@@ -268,7 +278,9 @@ impl AnvilManager {
 
             // stdout EOF — process exited
             if !started {
-                let _ = tx_stdout.send(Action::AnvilError("Anvil process exited unexpectedly".to_string()));
+                let _ = tx_stdout.send(Action::AnvilError(
+                    "Anvil process exited unexpectedly".to_string(),
+                ));
             }
             let _ = tx_stdout.send(Action::AnvilStopped);
         });

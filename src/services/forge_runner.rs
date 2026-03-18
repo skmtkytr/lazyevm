@@ -19,10 +19,7 @@ impl ForgeRunner {
     }
 
     /// Run `forge script` with streaming output
-    pub async fn script(
-        path: &str,
-        action_tx: UnboundedSender<Action>,
-    ) -> color_eyre::Result<()> {
+    pub async fn script(path: &str, action_tx: UnboundedSender<Action>) -> color_eyre::Result<()> {
         Self::run_command("script", &[path, "-vvvv"], action_tx).await
     }
 

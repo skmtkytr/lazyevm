@@ -216,14 +216,8 @@ impl RpcClient {
             from: tx_json["from"].as_str().unwrap_or("").to_string(),
             to: tx_json["to"].as_str().unwrap_or("").to_string(),
             value: tx_json["value"].as_str().unwrap_or("0").to_string(),
-            gas_used: receipt_json["gasUsed"]
-                .as_str()
-                .unwrap_or("0")
-                .to_string(),
-            gas_price: tx_json["gasPrice"]
-                .as_str()
-                .unwrap_or("0")
-                .to_string(),
+            gas_used: receipt_json["gasUsed"].as_str().unwrap_or("0").to_string(),
+            gas_price: tx_json["gasPrice"].as_str().unwrap_or("0").to_string(),
             input: tx_json["input"].as_str().unwrap_or("0x").to_string(),
             block_number,
             status,

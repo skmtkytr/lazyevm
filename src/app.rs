@@ -1,25 +1,25 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
-    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
 };
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 
 use crate::action::Action;
-use crate::components::status_bar::{MessageKind, StatusBar};
 use crate::components::sidebar::Sidebar;
+use crate::components::status_bar::{MessageKind, StatusBar};
 use crate::components::Component;
 use crate::config::Config;
 use crate::event::{Event, EventHandler};
-use crate::panels::PanelId;
 use crate::panels::anvil::AnvilPanel;
 use crate::panels::cast::CastPanel;
 use crate::panels::explorer::ExplorerPanel;
 use crate::panels::forge::ForgePanel;
 use crate::panels::wallets::WalletsPanel;
+use crate::panels::PanelId;
 use crate::services::anvil_manager::AnvilManager;
 use crate::services::cast_runner::CastRunner;
 use crate::services::forge_runner::ForgeRunner;
@@ -188,9 +188,7 @@ impl App {
                 let panel = self.sidebar.panels[prev];
                 Some(Action::SwitchPanel(panel))
             }
-            KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => {
-                Some(Action::FocusContent)
-            }
+            KeyCode::Char('l') | KeyCode::Right | KeyCode::Enter => Some(Action::FocusContent),
             // Panel switching by number
             KeyCode::Char('1') => Some(Action::SwitchPanel(PanelId::Wallets)),
             KeyCode::Char('2') => Some(Action::SwitchPanel(PanelId::Anvil)),
@@ -288,8 +286,12 @@ impl App {
                 let tx = self.action_tx.clone();
                 tokio::spawn(async move {
                     match KeystoreService::list_wallets().await {
-                        Ok(wallets) => { let _ = tx.send(Action::WalletsLoaded(wallets)); }
-                        Err(e) => { let _ = tx.send(Action::Error(e.to_string())); }
+                        Ok(wallets) => {
+                            let _ = tx.send(Action::WalletsLoaded(wallets));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::Error(e.to_string()));
+                        }
                     }
                 });
             }
@@ -301,7 +303,9 @@ impl App {
                             let _ = tx.send(Action::WalletCreated(msg));
                             let _ = tx.send(Action::RefreshWallets);
                         }
-                        Err(e) => { let _ = tx.send(Action::Error(e.to_string())); }
+                        Err(e) => {
+                            let _ = tx.send(Action::Error(e.to_string()));
+                        }
                     }
                 });
             }
@@ -343,7 +347,10 @@ impl App {
             Action::BalanceLoaded { .. } | Action::WalletCreated(_) | Action::WalletImported(_) => {
                 // Delegate to panel
             }
-            Action::UnlockWallet { ref name, ref password } => {
+            Action::UnlockWallet {
+                ref name,
+                ref password,
+            } => {
                 let tx = self.action_tx.clone();
                 let name = name.clone();
                 let password = password.clone();
@@ -355,9 +362,8 @@ impl App {
                                 name: name.clone(),
                                 address: address.clone(),
                             });
-                            let _ = tx.send(Action::SetStatus(
-                                format!("Unlocked wallet: {}", name),
-                            ));
+                            let _ =
+                                tx.send(Action::SetStatus(format!("Unlocked wallet: {}", name)));
                             // Fetch balance for the newly unlocked wallet
                             match KeystoreService::get_balance(&address, &rpc_url).await {
                                 Ok(bal) => {
@@ -375,9 +381,7 @@ impl App {
                             }
                         }
                         Err(e) => {
-                            let _ = tx.send(Action::Error(
-                                format!("Unlock failed: {}", e),
-                            ));
+                            let _ = tx.send(Action::Error(format!("Unlock failed: {}", e)));
                         }
                     }
                 });
@@ -406,9 +410,9 @@ impl App {
                     self.config.networks.list.clone(),
                     self.config.networks.active.clone(),
                 );
-                let _ = self.action_tx.send(Action::SetStatus(
-                    format!("Added network: {}", name),
-                ));
+                let _ = self
+                    .action_tx
+                    .send(Action::SetStatus(format!("Added network: {}", name)));
                 return;
             }
             Action::RemoveNetwork(ref name) => {
@@ -418,9 +422,9 @@ impl App {
                     self.config.networks.list.clone(),
                     self.config.networks.active.clone(),
                 );
-                let _ = self.action_tx.send(Action::SetStatus(
-                    "Network removed".to_string(),
-                ));
+                let _ = self
+                    .action_tx
+                    .send(Action::SetStatus("Network removed".to_string()));
                 return;
             }
             Action::NetworkChanged { .. } => {
@@ -471,8 +475,12 @@ impl App {
                 let port = self.anvil_manager.port();
                 tokio::spawn(async move {
                     match AnvilManager::mine_block(port).await {
-                        Ok(num) => { let _ = tx.send(Action::BlockMined(num)); }
-                        Err(e) => { let _ = tx.send(Action::AnvilError(e.to_string())); }
+                        Ok(num) => {
+                            let _ = tx.send(Action::BlockMined(num));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::AnvilError(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -485,7 +493,9 @@ impl App {
                         Ok(()) => {
                             let _ = tx.send(Action::SetStatus("Anvil state reset".to_string()));
                         }
-                        Err(e) => { let _ = tx.send(Action::AnvilError(e.to_string())); }
+                        Err(e) => {
+                            let _ = tx.send(Action::AnvilError(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -493,13 +503,16 @@ impl App {
             Action::AnvilDumpState => {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
-                self.status_bar.set_message("Dumping state...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Dumping state...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     match AnvilManager::dump_state(port).await {
                         Ok(()) => {
                             let _ = tx.send(Action::SetStatus("State dumped to file".to_string()));
                         }
-                        Err(e) => { let _ = tx.send(Action::AnvilError(e.to_string())); }
+                        Err(e) => {
+                            let _ = tx.send(Action::AnvilError(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -508,11 +521,13 @@ impl App {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
                 let accounts: Vec<_> = self.anvil.accounts().to_vec();
-                self.status_bar.set_message("Loading state...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Loading state...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     match AnvilManager::load_state(port).await {
                         Ok(()) => {
-                            let _ = tx.send(Action::SetStatus("State loaded from file".to_string()));
+                            let _ =
+                                tx.send(Action::SetStatus("State loaded from file".to_string()));
                             // Refresh account balances
                             let rpc = format!("http://localhost:{}", port);
                             let runner = CastRunner::new(&rpc);
@@ -524,25 +539,36 @@ impl App {
                             }
                             let _ = tx.send(Action::AnvilAccounts(updated));
                         }
-                        Err(e) => { let _ = tx.send(Action::AnvilError(e.to_string())); }
+                        Err(e) => {
+                            let _ = tx.send(Action::AnvilError(e.to_string()));
+                        }
                     }
                 });
                 return;
             }
-            Action::AnvilTransfer { ref from_key, ref to, ref value, ref token } => {
+            Action::AnvilTransfer {
+                ref from_key,
+                ref to,
+                ref value,
+                ref token,
+            } => {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
                 let from_key = from_key.clone();
                 let to = to.clone();
                 let value = value.clone();
                 let token = token.clone();
-                self.status_bar.set_message("Sending transfer...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Sending transfer...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
                     match token {
                         Some(ref token_addr) => {
-                            match runner.transfer_erc20(&from_key, token_addr, &to, &value).await {
+                            match runner
+                                .transfer_erc20(&from_key, token_addr, &to, &value)
+                                .await
+                            {
                                 Ok(_) => {
                                     let msg = format!("ERC20 transfer {} to {}", value, to);
                                     let _ = tx.send(Action::AnvilTransferDone(msg));
@@ -552,17 +578,15 @@ impl App {
                                 }
                             }
                         }
-                        None => {
-                            match runner.transfer(&from_key, &to, &value).await {
-                                Ok(_) => {
-                                    let msg = format!("Transferred {} ETH to {}", value, to);
-                                    let _ = tx.send(Action::AnvilTransferDone(msg));
-                                }
-                                Err(e) => {
-                                    let _ = tx.send(Action::AnvilError(e.to_string()));
-                                }
+                        None => match runner.transfer(&from_key, &to, &value).await {
+                            Ok(_) => {
+                                let msg = format!("Transferred {} ETH to {}", value, to);
+                                let _ = tx.send(Action::AnvilTransferDone(msg));
                             }
-                        }
+                            Err(e) => {
+                                let _ = tx.send(Action::AnvilError(e.to_string()));
+                            }
+                        },
                     }
                 });
                 return;
@@ -598,9 +622,11 @@ impl App {
                     url.clone()
                 });
                 if url.is_empty() {
-                    self.status_bar.set_message("Fork URL cleared".to_string(), MessageKind::Info);
+                    self.status_bar
+                        .set_message("Fork URL cleared".to_string(), MessageKind::Info);
                 } else {
-                    self.status_bar.set_message(format!("Fork URL set: {}", url), MessageKind::Success);
+                    self.status_bar
+                        .set_message(format!("Fork URL set: {}", url), MessageKind::Success);
                 }
                 return;
             }
@@ -616,7 +642,11 @@ impl App {
                 let fork_url2 = fork_url.clone();
                 match CastRunner::check_rpc_connectivity(&fork_url).await {
                     Ok(()) => {
-                        match self.anvil_manager.start_fork(port, &fork_url2, tx.clone()).await {
+                        match self
+                            .anvil_manager
+                            .start_fork(port, &fork_url2, tx.clone())
+                            .await
+                        {
                             Ok(()) => {
                                 self.anvil.fork_mode = true;
                                 self.status_bar.set_message(
@@ -630,9 +660,9 @@ impl App {
                         }
                     }
                     Err(e) => {
-                        let _ = self.action_tx.send(Action::Error(
-                            format!("Fork RPC unreachable: {}", e),
-                        ));
+                        let _ = self
+                            .action_tx
+                            .send(Action::Error(format!("Fork RPC unreachable: {}", e)));
                     }
                 }
                 return;
@@ -644,43 +674,46 @@ impl App {
                 let port = self.anvil_manager.port();
                 let account = account.clone();
                 let tokens: Vec<_> = self.config.tokens.list.clone();
-                self.status_bar.set_message("Loading token balances...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Loading token balances...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
                     // Parallel fetch with futures::join_all
-                    let futs: Vec<_> = tokens.iter().map(|token| {
-                        let runner_ref = &runner;
-                        let account_ref = &account;
-                        let addr = token.address.clone();
-                        let symbol = token.symbol.clone();
-                        let decimals = token.decimals;
-                        async move {
-                            match runner_ref.token_balance(&addr, account_ref).await {
-                                Ok(raw) => {
-                                    let formatted = CastRunner::format_token_balance(&raw, decimals);
-                                    crate::action::TokenBalance {
-                                        token_address: addr,
-                                        symbol,
-                                        balance: formatted,
-                                        raw_balance: raw,
-                                        status: crate::action::TokenBalanceStatus::Loaded,
+                    let futs: Vec<_> = tokens
+                        .iter()
+                        .map(|token| {
+                            let runner_ref = &runner;
+                            let account_ref = &account;
+                            let addr = token.address.clone();
+                            let symbol = token.symbol.clone();
+                            let decimals = token.decimals;
+                            async move {
+                                match runner_ref.token_balance(&addr, account_ref).await {
+                                    Ok(raw) => {
+                                        let formatted =
+                                            CastRunner::format_token_balance(&raw, decimals);
+                                        crate::action::TokenBalance {
+                                            token_address: addr,
+                                            symbol,
+                                            balance: formatted,
+                                            raw_balance: raw,
+                                            status: crate::action::TokenBalanceStatus::Loaded,
+                                        }
                                     }
-                                }
-                                Err(e) => {
-                                    crate::action::TokenBalance {
+                                    Err(e) => crate::action::TokenBalance {
                                         token_address: addr,
                                         symbol,
                                         balance: "err".to_string(),
                                         raw_balance: "0".to_string(),
                                         status: crate::action::TokenBalanceStatus::Error(
-                                            e.to_string().chars().take(50).collect()
+                                            e.to_string().chars().take(50).collect(),
                                         ),
-                                    }
+                                    },
                                 }
                             }
-                        }
-                    }).collect();
+                        })
+                        .collect();
                     let balances = futures::future::join_all(futs).await;
                     let _ = tx.send(Action::TokenBalancesLoaded { account, balances });
                 });
@@ -693,22 +726,22 @@ impl App {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
                 let address = address.clone();
-                self.status_bar.set_message(
-                    format!("Detecting token {}...", address),
-                    MessageKind::Info,
-                );
+                self.status_bar
+                    .set_message(format!("Detecting token {}...", address), MessageKind::Info);
                 // Try to get a test account for slot detection
-                let test_account = self.anvil.accounts().first()
-                    .map(|a| a.address.clone());
+                let test_account = self.anvil.accounts().first().map(|a| a.address.clone());
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
-                    let symbol = runner.token_symbol(&address).await
+                    let symbol = runner
+                        .token_symbol(&address)
+                        .await
                         .unwrap_or_else(|_| "???".to_string());
-                    let name = runner.token_name(&address).await
+                    let name = runner
+                        .token_name(&address)
+                        .await
                         .unwrap_or_else(|_| "Unknown".to_string());
-                    let decimals = runner.token_decimals(&address).await
-                        .unwrap_or(18);
+                    let decimals = runner.token_decimals(&address).await.unwrap_or(18);
                     // Try to auto-detect balance slot
                     let balance_slot = if let Some(ref acct) = test_account {
                         runner.detect_balance_slot(&address, acct).await.ok()
@@ -736,24 +769,33 @@ impl App {
                 );
                 return;
             }
-            Action::DealToken { ref token_address, ref to, ref amount, decimals, balance_slot } => {
+            Action::DealToken {
+                ref token_address,
+                ref to,
+                ref amount,
+                decimals,
+                balance_slot,
+            } => {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
                 let token_address = token_address.clone();
                 let to = to.clone();
                 let amount = amount.clone();
-                let decimals = decimals;
-                let balance_slot = balance_slot;
-                self.status_bar.set_message("Setting token balance...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Setting token balance...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
                     let raw_amount = CastRunner::compute_raw_amount(&amount, decimals);
-                    match runner.deal_token(&token_address, &to, &raw_amount, balance_slot).await {
+                    match runner
+                        .deal_token(&token_address, &to, &raw_amount, balance_slot)
+                        .await
+                    {
                         Ok(_) => {
-                            let _ = tx.send(Action::DealTokenDone(
-                                format!("Deal {} tokens to {}", amount, to),
-                            ));
+                            let _ = tx.send(Action::DealTokenDone(format!(
+                                "Deal {} tokens to {}",
+                                amount, to
+                            )));
                         }
                         Err(e) => {
                             let _ = tx.send(Action::AnvilError(e.to_string()));
@@ -770,7 +812,8 @@ impl App {
                 let port = self.anvil_manager.port();
                 let to = to.clone();
                 let amount = amount.clone();
-                self.status_bar.set_message("Setting ETH balance...".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Setting ETH balance...".to_string(), MessageKind::Info);
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
@@ -778,9 +821,10 @@ impl App {
                     let raw_wei = CastRunner::compute_raw_amount(&amount, 18);
                     match runner.set_eth_balance(&to, &raw_wei).await {
                         Ok(_) => {
-                            let _ = tx.send(Action::DealEthDone(
-                                format!("Set {} ETH for {}", amount, to),
-                            ));
+                            let _ = tx.send(Action::DealEthDone(format!(
+                                "Set {} ETH for {}",
+                                amount, to
+                            )));
                         }
                         Err(e) => {
                             let _ = tx.send(Action::AnvilError(e.to_string()));
@@ -808,7 +852,10 @@ impl App {
                 });
                 return;
             }
-            Action::DetectBalanceSlot { ref token_address, ref test_account } => {
+            Action::DetectBalanceSlot {
+                ref token_address,
+                ref test_account,
+            } => {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
                 let token_address = token_address.clone();
@@ -820,7 +867,10 @@ impl App {
                 tokio::spawn(async move {
                     let rpc = format!("http://localhost:{}", port);
                     let runner = CastRunner::new(&rpc);
-                    match runner.detect_balance_slot(&token_address, &test_account).await {
+                    match runner
+                        .detect_balance_slot(&token_address, &test_account)
+                        .await
+                    {
                         Ok(slot) => {
                             let _ = tx.send(Action::BalanceSlotDetected {
                                 token_address,
@@ -828,17 +878,22 @@ impl App {
                             });
                         }
                         Err(e) => {
-                            let _ = tx.send(Action::Error(
-                                format!("Slot detection failed: {}", e),
-                            ));
+                            let _ = tx.send(Action::Error(format!("Slot detection failed: {}", e)));
                         }
                     }
                 });
                 return;
             }
-            Action::BalanceSlotDetected { ref token_address, slot } => {
+            Action::BalanceSlotDetected {
+                ref token_address,
+                slot,
+            } => {
                 // Update config with detected slot
-                if let Some(entry) = self.config.tokens.list.iter_mut()
+                if let Some(entry) = self
+                    .config
+                    .tokens
+                    .list
+                    .iter_mut()
                     .find(|t| t.address == *token_address)
                 {
                     entry.balance_slot = Some(slot);
@@ -849,7 +904,8 @@ impl App {
             Action::RemoveToken(ref address) => {
                 self.config.remove_token(address);
                 self.anvil.set_tokens(&self.config.tokens.list);
-                self.status_bar.set_message("Token removed".to_string(), MessageKind::Info);
+                self.status_bar
+                    .set_message("Token removed".to_string(), MessageKind::Info);
                 return;
             }
 
@@ -881,7 +937,11 @@ impl App {
             }
 
             // Cast actions
-            Action::CastCall { ref to, ref sig, ref args } => {
+            Action::CastCall {
+                ref to,
+                ref sig,
+                ref args,
+            } => {
                 let tx = self.action_tx.clone();
                 let rpc = self.config.active_rpc_url().to_string();
                 let to = to.clone();
@@ -890,13 +950,21 @@ impl App {
                 tokio::spawn(async move {
                     let runner = CastRunner::new(&rpc);
                     match runner.call(&to, &sig, &args).await {
-                        Ok(result) => { let _ = tx.send(Action::CastResult(result)); }
-                        Err(e) => { let _ = tx.send(Action::CastError(e.to_string())); }
+                        Ok(result) => {
+                            let _ = tx.send(Action::CastResult(result));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::CastError(e.to_string()));
+                        }
                     }
                 });
                 return;
             }
-            Action::CastSend { ref to, ref sig, ref args } => {
+            Action::CastSend {
+                ref to,
+                ref sig,
+                ref args,
+            } => {
                 let tx = self.action_tx.clone();
                 let rpc = self.config.active_rpc_url().to_string();
                 let to = to.clone();
@@ -905,8 +973,12 @@ impl App {
                 tokio::spawn(async move {
                     let runner = CastRunner::new(&rpc);
                     match runner.send(&to, &sig, &args).await {
-                        Ok(result) => { let _ = tx.send(Action::CastResult(result)); }
-                        Err(e) => { let _ = tx.send(Action::CastError(e.to_string())); }
+                        Ok(result) => {
+                            let _ = tx.send(Action::CastResult(result));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::CastError(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -918,8 +990,12 @@ impl App {
                 tokio::spawn(async move {
                     let runner = CastRunner::new(&rpc);
                     match runner.balance(&addr).await {
-                        Ok(result) => { let _ = tx.send(Action::CastResult(result)); }
-                        Err(e) => { let _ = tx.send(Action::CastError(e.to_string())); }
+                        Ok(result) => {
+                            let _ = tx.send(Action::CastResult(result));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::CastError(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -932,8 +1008,12 @@ impl App {
                 tokio::spawn(async move {
                     let client = RpcClient::with_port(port);
                     match client.get_recent_blocks(20).await {
-                        Ok(blocks) => { let _ = tx.send(Action::BlocksLoaded(blocks)); }
-                        Err(e) => { let _ = tx.send(Action::Error(e.to_string())); }
+                        Ok(blocks) => {
+                            let _ = tx.send(Action::BlocksLoaded(blocks));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::Error(e.to_string()));
+                        }
                     }
                 });
                 return;
@@ -941,12 +1021,15 @@ impl App {
             Action::SelectBlock(num) => {
                 let tx = self.action_tx.clone();
                 let port = self.anvil_manager.port();
-                let num = num;
                 tokio::spawn(async move {
                     let client = RpcClient::with_port(port);
                     match client.get_block_transactions(num).await {
-                        Ok(txs) => { let _ = tx.send(Action::TxsLoaded(txs)); }
-                        Err(e) => { let _ = tx.send(Action::Error(e.to_string())); }
+                        Ok(txs) => {
+                            let _ = tx.send(Action::TxsLoaded(txs));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::Error(e.to_string()));
+                        }
                     }
                 });
             }
@@ -957,8 +1040,12 @@ impl App {
                 tokio::spawn(async move {
                     let client = RpcClient::with_port(port);
                     match client.get_tx_detail(&hash).await {
-                        Ok(detail) => { let _ = tx.send(Action::TxDetailLoaded(detail)); }
-                        Err(e) => { let _ = tx.send(Action::Error(e.to_string())); }
+                        Ok(detail) => {
+                            let _ = tx.send(Action::TxDetailLoaded(detail));
+                        }
+                        Err(e) => {
+                            let _ = tx.send(Action::Error(e.to_string()));
+                        }
                     }
                 });
             }
@@ -993,14 +1080,14 @@ impl App {
 
         // Main layout: sidebar + content + status bar
         let main_chunks = Layout::vertical([
-            Constraint::Min(1),   // content area
+            Constraint::Min(1),    // content area
             Constraint::Length(1), // status bar
         ])
         .split(size);
 
         let content_chunks = Layout::horizontal([
             Constraint::Length(22), // sidebar
-            Constraint::Min(1),    // panel content
+            Constraint::Min(1),     // panel content
         ])
         .split(main_chunks[0]);
 
@@ -1091,44 +1178,55 @@ impl App {
         // Panel-specific
         lines.push(Line::from(""));
         let (title, keys): (&str, Vec<(&str, &str)>) = match self.active_panel {
-            PanelId::Wallets => ("-- Wallets --", vec![
-                ("n", "Create new wallet"),
-                ("i", "Import wallet"),
-                ("r", "Refresh wallets"),
-                ("p", "Unlock (password)"),
-            ]),
-            PanelId::Anvil => ("-- Anvil --", vec![
-                ("s", "Start anvil"),
-                ("S", "Stop anvil"),
-                ("f", "Fork mainnet"),
-                ("F", "Edit fork URL"),
-                ("m", "Mine block"),
-                ("R", "Reset state"),
-                ("t", "Transfer ETH/ERC20"),
-                ("D", "Deal token balance"),
-                ("E", "Deal ETH balance"),
-                ("B", "Detect balance slot"),
-                ("a", "Add custom token"),
-                ("x", "Remove token"),
-                ("r", "Refresh balances"),
-                ("d", "Dump state"),
-                ("L", "Load state"),
-            ]),
-            PanelId::Forge => ("-- Forge --", vec![
-                ("b", "Build"),
-                ("t", "Test"),
-                ("c", "Clear output"),
-            ]),
-            PanelId::Cast => ("-- Cast --", vec![
-                ("Enter", "Start editing"),
-                ("j / k", "Switch field"),
-                ("Esc", "Exit editing"),
-            ]),
-            PanelId::Explorer => ("-- Explorer --", vec![
-                ("r", "Refresh blocks"),
-                ("Enter", "View details"),
-                ("Esc", "Go back"),
-            ]),
+            PanelId::Wallets => (
+                "-- Wallets --",
+                vec![
+                    ("n", "Create new wallet"),
+                    ("i", "Import wallet"),
+                    ("r", "Refresh wallets"),
+                    ("p", "Unlock (password)"),
+                ],
+            ),
+            PanelId::Anvil => (
+                "-- Anvil --",
+                vec![
+                    ("s", "Start anvil"),
+                    ("S", "Stop anvil"),
+                    ("f", "Fork mainnet"),
+                    ("F", "Edit fork URL"),
+                    ("m", "Mine block"),
+                    ("R", "Reset state"),
+                    ("t", "Transfer ETH/ERC20"),
+                    ("D", "Deal token balance"),
+                    ("E", "Deal ETH balance"),
+                    ("B", "Detect balance slot"),
+                    ("a", "Add custom token"),
+                    ("x", "Remove token"),
+                    ("r", "Refresh balances"),
+                    ("d", "Dump state"),
+                    ("L", "Load state"),
+                ],
+            ),
+            PanelId::Forge => (
+                "-- Forge --",
+                vec![("b", "Build"), ("t", "Test"), ("c", "Clear output")],
+            ),
+            PanelId::Cast => (
+                "-- Cast --",
+                vec![
+                    ("Enter", "Start editing"),
+                    ("j / k", "Switch field"),
+                    ("Esc", "Exit editing"),
+                ],
+            ),
+            PanelId::Explorer => (
+                "-- Explorer --",
+                vec![
+                    ("r", "Refresh blocks"),
+                    ("Enter", "View details"),
+                    ("Esc", "Go back"),
+                ],
+            ),
         };
         lines.push(Line::from(Span::styled(title, section_style)));
         for (k, d) in &keys {
